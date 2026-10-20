@@ -32,3 +32,4 @@ A small Flask web app delivered through a Scrum-managed CI/CD pipeline.
 3. **publish** - push image to GitHub Container Registry (main branch only)
 
 See `scrum/SCRUM_PLAN.md` for sprints and `docs/SCREENSHOT_CHECKLIST.md` for report screenshots.
+Feature branch test: DEV-3 README update.
