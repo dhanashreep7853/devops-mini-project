@@ -1,0 +1,100 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: devops-mini-project
+
+jobs:
+  # ---------- Stage 1: Build + Test ----------
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint (flake8)
+        run: flake8 .
+
+      - name: Run unit tests with coverage
+        run: pytest --cov=app --cov-report=term-missing --cov-report=xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  # ---------- Stage 2: Package (Docker) + Smoke test ----------
+  docker:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME:${{ github.sha }} .
+
+      - name: Run container
+        run: docker run -d --name app -p 5000:5000 $IMAGE_NAME:${{ github.sha }}
+
+      - name: Smoke test (verify deployment)
+        run: |
+          for i in $(seq 1 10); do
+            if curl -fs http://localhost:5000/health; then
+              echo; echo "Smoke test passed"; exit 0
+            fi
+            sleep 2
+          done
+          docker logs app
+          echo "Smoke test failed"; exit 1
+
+      - name: Show running container
+        if: always()
+        run: docker ps && docker images $IMAGE_NAME
+
+  # ---------- Stage 3: Publish image (main branch only) ----------
+  publish:
+    needs: docker
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lowercase repository owner (GHCR requires lowercase)
+        run: echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ env.OWNER }}/devops-mini-project:latest
+            ghcr.io/${{ env.OWNER }}/devops-mini-project:${{ github.sha }}

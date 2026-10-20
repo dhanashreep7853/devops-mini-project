@@ -1,0 +1,10 @@
+.git
+.github
+tests
+scrum
+docs
+__pycache__
+*.pyc
+.venv
+.pytest_cache
+.coverage

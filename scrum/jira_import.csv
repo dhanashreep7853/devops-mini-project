@@ -1,0 +1,13 @@
+Summary,Issue Type,Priority,Description,Labels
+Task Tracker MVP,Epic,High,End-to-end DevOps mini project: app + CI/CD + Docker,devops
+Create GitHub repository and project structure,Story,High,"As a developer, I want a GitHub repo with a clear structure so the team can collaborate.",sprint1
+Implement add/list task API,Story,High,"As a user, I want to add and view tasks so I can track my work. AC: POST/GET /api/tasks work.",sprint1
+Implement complete/delete task API,Story,Medium,"As a user, I want to mark tasks done or delete them. AC: PATCH/DELETE work; 404 for unknown id.",sprint1
+Build web UI for Task Tracker,Story,Medium,"As a user, I want a web page to manage tasks in the browser.",sprint1
+Write unit tests with pytest,Story,High,"AC: >=80% coverage; tests run in CI.",sprint2
+Create GitHub Actions CI workflow,Story,High,"AC: workflow runs lint + tests on push and pull request.",sprint2
+Create Dockerfile and build image,Story,High,"AC: image builds and app runs in a container on port 5000.",sprint2
+Add Docker build and smoke test to pipeline,Story,Medium,"AC: pipeline runs container and checks /health.",sprint2
+Publish image to GitHub Container Registry,Story,Low,"AC: image pushed on merge to main.",sprint2
+Deploy and verify application in browser,Story,High,"AC: app reachable on localhost:5000 and works end to end.",sprint2
+Fix: empty task title accepted,Bug,Medium,"Validation should reject blank titles with HTTP 400.",sprint2
